@@ -4,17 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
-    <title>Movie App</title>
+    <title>Movies Scout | Discover Movies & Web Series</title>
      <!--==fav-icon=======================-->
     <link rel="shortcut icon" href="images/logo.png"/>
 </head>
 <body>
     
-    <header>
+    <header class="site-header">
+        <div class="branding">
+            <h1>Movies Scout</h1>
+            <p>Find the best movies and web series</p>
+        </div>
         <form  id="form">
-            <input type="text" placeholder="Search" id="search" class="search">
+            <label class="sr-only" for="search">Search movies and web series</label>
+            <input type="text" placeholder="Search movies and web series" id="search" class="search">
         </form>
     </header>
+    <section class="browse-controls" aria-label="Browse options">
+        <div class="media-switcher" role="group" aria-label="Choose media type">
+            <button class="media-tab active" type="button" data-media-type="movie">Movies</button>
+            <button class="media-tab" type="button" data-media-type="tv">Web Series</button>
+        </div>
+        <label class="sort-control" for="sort-select">
+            <span>Sort by</span>
+            <select id="sort-select">
+                <option value="trending">Trending</option>
+                <option value="rating">Highest Rating</option>
+                <option value="latest">Latest Release</option>
+            </select>
+        </label>
+    </section>
     <div id="tags"></div>
     <div id="myNav" class="overlay">
 

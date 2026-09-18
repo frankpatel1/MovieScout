@@ -2,9 +2,7 @@
 
 const API_KEY = 'api_key=1cf50e6248dc270629e802686245c2c8';
 const BASE_URL = 'https://api.themoviedb.org/3';
-const API_URL = BASE_URL + '/discover/movie?sort_by=popularity.desc&'+API_KEY;
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
-const searchURL = BASE_URL + '/search/movie?'+API_KEY;
 
 const genres = [
     {
@@ -89,6 +87,8 @@ const main = document.getElementById('main');
 const form =  document.getElementById('form');
 const search = document.getElementById('search');
 const tagsEl = document.getElementById('tags');
+const sortSelect = document.getElementById('sort-select');
+const mediaTabs = document.querySelectorAll('.media-tab');
 
 const prev = document.getElementById('prev')
 const next = document.getElementById('next')
@@ -99,8 +99,27 @@ var nextPage = 2;
 var prevPage = 3;
 var lastUrl = '';
 var totalPages = 100;
+var mediaType = 'movie';
+var sortType = 'trending';
 
 var selectedGenre = []
+function getDiscoverUrl() {
+    const sortBy = sortType === 'rating'
+        ? 'vote_average.desc&vote_count.gte=100'
+        : sortType === 'latest'
+            ? (mediaType === 'movie' ? 'primary_release_date.desc' : 'first_air_date.desc')
+            : 'popularity.desc';
+    return BASE_URL + '/discover/' + mediaType + '?sort_by=' + sortBy + '&' + API_KEY;
+}
+
+function getSearchUrl() {
+    return BASE_URL + '/search/' + mediaType + '?' + API_KEY;
+}
+
+function getCurrentUrl() {
+    return getDiscoverUrl() + (selectedGenre.length ? '&with_genres=' + encodeURI(selectedGenre.join(',')) : '');
+}
+
 setGenre();
 function setGenre() {
     tagsEl.innerHTML= '';
@@ -124,7 +143,7 @@ function setGenre() {
                 }
             }
             console.log(selectedGenre)
-            getMovies(API_URL + '&with_genres='+encodeURI(selectedGenre.join(',')))
+            getMovies(getCurrentUrl())
             highlightSelection()
         })
         tagsEl.append(t);
@@ -159,14 +178,14 @@ function clearBtn(){
         clear.addEventListener('click', () => {
             selectedGenre = [];
             setGenre();            
-            getMovies(API_URL);
+            getMovies(getCurrentUrl());
         })
         tagsEl.append(clear);
     }
     
 }
 
-getMovies(API_URL);
+getMovies(getCurrentUrl());
 
 function getMovies(url) {
   lastUrl = url;
@@ -205,17 +224,33 @@ function getMovies(url) {
 
 function showMovies(data) {
     main.innerHTML = '';
+    const sortedData = [...data];
+    if (sortType === 'rating') {
+        sortedData.sort((a, b) => b.vote_average - a.vote_average);
+    } else if (sortType === 'latest') {
+        const dateKey = mediaType === 'movie' ? 'release_date' : 'first_air_date';
+        sortedData.sort((a, b) => (b[dateKey] || '').localeCompare(a[dateKey] || ''));
+    }
 
-    data.forEach(movie => {
-        const {title, poster_path, vote_average, overview, id} = movie;
+    sortedData.forEach(movie => {
+        const title = mediaType === 'movie' ? movie.title : movie.name;
+        const releaseDate = mediaType === 'movie' ? movie.release_date : movie.first_air_date;
+        const {poster_path, vote_average, overview, id} = movie;
+        const year = releaseDate ? releaseDate.slice(0, 4) : 'TBA';
+        const stars = '★'.repeat(Math.max(0, Math.min(5, Math.round(vote_average / 2))));
         const movieEl = document.createElement('div');
         movieEl.classList.add('movie');
         movieEl.innerHTML = `
              <img src="${poster_path? IMG_URL+poster_path: "http://via.placeholder.com/1080x1580" }" alt="${title}">
 
             <div class="movie-info">
-                <h3>${title}</h3>
-                <span class="${getColor(vote_average)}">${vote_average}</span>
+                <div class="title-wrap">
+                    <h3>${title}</h3>
+                    <span class="year-badge">${year}</span>
+                </div>
+                <span class="${getColor(vote_average)} rating" aria-label="${vote_average} out of 10">
+                    <span class="stars" aria-hidden="true">${stars}</span> ${vote_average.toFixed(1)}
+                </span>
             </div>
 
             <div class="overview">
@@ -223,7 +258,7 @@ function showMovies(data) {
                 <h3>Overview</h3>
                 ${overview}
                 <br/> 
-                <button class="know-more" id="${id}">Know More</button
+                <button class="know-more" id="${id}">Know More</button>
             </div>
         
         `
@@ -241,7 +276,8 @@ const overlayContent = document.getElementById('overlay-content');
 /* Open when someone clicks on the span element */
 function openNav(movie) {
   let id = movie.id;
-  fetch(BASE_URL + '/movie/'+id+'/videos?'+API_KEY).then(res => res.json()).then(videoData => {
+  const videoPath = mediaType === 'movie' ? '/movie/' : '/tv/';
+  fetch(BASE_URL + videoPath + id + '/videos?'+API_KEY).then(res => res.json()).then(videoData => {
     console.log(videoData);
     if(videoData){
       document.getElementById("myNav").style.width = "100%";
@@ -265,7 +301,7 @@ function openNav(movie) {
         })
         
         var content = `
-        <h1 class="no-results">${movie.original_title}</h1>
+        <h1 class="no-results">${mediaType === 'movie' ? movie.original_title : movie.original_name}</h1>
         <br/>
         
         ${embed.join('')}
@@ -357,12 +393,27 @@ form.addEventListener('submit', (e) => {
     selectedGenre=[];
     setGenre();
     if(searchTerm) {
-        getMovies(searchURL+'&query='+searchTerm)
+        getMovies(getSearchUrl()+'&query='+encodeURIComponent(searchTerm))
     }else{
-        getMovies(API_URL);
+        getMovies(getCurrentUrl());
     }
 
 })
+
+mediaTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    mediaType = tab.dataset.mediaType;
+    selectedGenre = [];
+    mediaTabs.forEach(item => item.classList.toggle('active', item === tab));
+    setGenre();
+    getMovies(getCurrentUrl());
+  });
+});
+
+sortSelect.addEventListener('change', () => {
+  sortType = sortSelect.value;
+  getMovies(getCurrentUrl());
+});
 
 prev.addEventListener('click', () => {
   if(prevPage > 0){
