@@ -3,6 +3,7 @@
 const API_KEY = 'api_key=1cf50e6248dc270629e802686245c2c8';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+const PLACEHOLDER_POSTER_URL = 'https://placehold.co/1080x1580/111827/ffffff?text=Poster+Unavailable';
 
 const genres = [
     {
@@ -189,10 +190,18 @@ getMovies(getCurrentUrl());
 
 function getMovies(url) {
   lastUrl = url;
-    fetch(url).then(res => res.json()).then(data => {
-        console.log(data.results)
-        if(data.results.length !== 0){
-            showMovies(data.results);
+
+  fetch(url)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+      return res.json();
+    })
+    .then((data) => {
+        const results = Array.isArray(data?.results) ? data.results : [];
+        if (results.length !== 0) {
+            showMovies(results);
             currentPage = data.page;
             nextPage = currentPage + 1;
             prevPage = currentPage - 1;
@@ -213,11 +222,28 @@ function getMovies(url) {
 
             tagsEl.scrollIntoView({behavior : 'smooth'})
 
-        }else{
+        } else {
+            currentPage = 1;
+            nextPage = 2;
+            prevPage = 0;
+            totalPages = 1;
+            current.innerText = currentPage;
+            prev.classList.add('disabled');
+            next.classList.add('disabled');
             main.innerHTML= `<h1 class="no-results">No Results Found</h1>`
         }
-       
     })
+    .catch((error) => {
+        console.error('Failed to fetch movies:', error);
+        currentPage = 1;
+        nextPage = 2;
+        prevPage = 0;
+        totalPages = 1;
+        current.innerText = currentPage;
+        prev.classList.add('disabled');
+        next.classList.add('disabled');
+        main.innerHTML = '<h1 class="no-results">Unable to load movies right now.</h1>';
+    });
 
 }
 
@@ -226,7 +252,7 @@ function showMovies(data) {
     main.innerHTML = '';
     const sortedData = [...data];
     if (sortType === 'rating') {
-        sortedData.sort((a, b) => b.vote_average - a.vote_average);
+        sortedData.sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
     } else if (sortType === 'latest') {
         const dateKey = mediaType === 'movie' ? 'release_date' : 'first_air_date';
         sortedData.sort((a, b) => (b[dateKey] || '').localeCompare(a[dateKey] || ''));
@@ -235,21 +261,22 @@ function showMovies(data) {
     sortedData.forEach(movie => {
         const title = mediaType === 'movie' ? movie.title : movie.name;
         const releaseDate = mediaType === 'movie' ? movie.release_date : movie.first_air_date;
-        const {poster_path, vote_average, overview, id} = movie;
+        const {poster_path, overview, id} = movie;
+        const voteAverage = Number(movie.vote_average ?? 0);
         const year = releaseDate ? releaseDate.slice(0, 4) : 'TBA';
-        const stars = '★'.repeat(Math.max(0, Math.min(5, Math.round(vote_average / 2))));
+        const stars = '★'.repeat(Math.max(0, Math.min(5, Math.round(voteAverage / 2))));
         const movieEl = document.createElement('div');
         movieEl.classList.add('movie');
         movieEl.innerHTML = `
-             <img src="${poster_path? IMG_URL+poster_path: "http://via.placeholder.com/1080x1580" }" alt="${title}">
+             <img src="${poster_path ? IMG_URL + poster_path : PLACEHOLDER_POSTER_URL}" alt="${title}">
 
             <div class="movie-info">
                 <div class="title-wrap">
                     <h3>${title}</h3>
                     <span class="year-badge">${year}</span>
                 </div>
-                <span class="${getColor(vote_average)} rating" aria-label="${vote_average} out of 10">
-                    <span class="stars" aria-hidden="true">${stars}</span> ${vote_average.toFixed(1)}
+                <span class="${getColor(voteAverage)} rating" aria-label="${voteAverage} out of 10">
+                    <span class="stars" aria-hidden="true">${stars}</span> ${voteAverage.toFixed(1)}
                 </span>
             </div>
 
@@ -277,14 +304,21 @@ const overlayContent = document.getElementById('overlay-content');
 function openNav(movie) {
   let id = movie.id;
   const videoPath = mediaType === 'movie' ? '/movie/' : '/tv/';
-  fetch(BASE_URL + videoPath + id + '/videos?'+API_KEY).then(res => res.json()).then(videoData => {
-    console.log(videoData);
-    if(videoData){
+  fetch(BASE_URL + videoPath + id + '/videos?' + API_KEY)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+      return res.json();
+    })
+    .then((videoData) => {
+      const videos = Array.isArray(videoData?.results) ? videoData.results : [];
       document.getElementById("myNav").style.width = "100%";
-      if(videoData.results.length > 0){
+
+      if (videos.length > 0) {
         var embed = [];
         var dots = [];
-        videoData.results.forEach((video, idx) => {
+        videos.forEach((video, idx) => {
           let {name, key, site} = video
 
           if(site == 'YouTube'){
@@ -316,8 +350,12 @@ function openNav(movie) {
       }else{
         overlayContent.innerHTML = `<h1 class="no-results">No Results Found</h1>`
       }
-    }
-  })
+    })
+    .catch((error) => {
+      console.error('Failed to fetch trailer data:', error);
+      document.getElementById("myNav").style.width = "100%";
+      overlayContent.innerHTML = '<h1 class="no-results">No trailer available</h1>';
+    });
 }
 
 /* Close when someone clicks on the "x" symbol inside the overlay */
@@ -428,18 +466,9 @@ next.addEventListener('click', () => {
 })
 
 function pageCall(page){
-  let urlSplit = lastUrl.split('?');
-  let queryParams = urlSplit[1].split('&');
-  let key = queryParams[queryParams.length -1].split('=');
-  if(key[0] != 'page'){
-    let url = lastUrl + '&page='+page
-    getMovies(url);
-  }else{
-    key[1] = page.toString();
-    let a = key.join('=');
-    queryParams[queryParams.length -1] = a;
-    let b = queryParams.join('&');
-    let url = urlSplit[0] +'?'+ b
-    getMovies(url);
-  }
+  const urlParts = lastUrl.split('?');
+  const searchParams = new URLSearchParams(urlParts[1] || '');
+  searchParams.set('page', page.toString());
+  const url = `${urlParts[0]}?${searchParams.toString()}`;
+  getMovies(url);
 }
