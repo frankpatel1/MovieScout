@@ -3,23 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <title>MovieScout | Discover Trending Movies & Web Series</title>
+    <meta name="description" content="Explore top trending movies, web series, trailers, and ratings with MovieScout. Filter by genre, view official trailers, and find what to watch next.">
+    <meta name="keywords" content="movies, web series, streaming guide, TMDB, movie trailers, movie ratings, watch list">
+    <meta name="author" content="MovieScout">
+    <link rel="canonical" href="https://example.com/MovieScout/">
+
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:title" content="MovieScout | Discover Trending Movies & Web Series">
+    <meta property="og:description" content="Find the best movies, web series, and official trailers across genres with real-time ratings.">
+    <meta property="og:image" content="images/logo.png">
+    <meta property="og:url" content="https://example.com/MovieScout/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MovieScout | Discover Trending Movies & Web Series">
+    <meta name="twitter:description" content="Explore top movies and web series with real-time ratings and trailers.">
+    <meta name="twitter:image" content="images/logo.png">
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
-    <title>Movies Scout | Discover Movies & Web Series</title>
-     <!--==fav-icon=======================-->
+    <link rel="stylesheet" href="css/cookie-consent.css">
+    
+    <!-- Favicon -->
     <link rel="shortcut icon" href="images/logo.png"/>
+    <link rel="apple-touch-icon" href="images/logo.png"/>
 </head>
 <body>
     
     <header class="site-header">
         <div class="branding">
-            <h1>Movies Scout</h1>
+            <a href="index.html" style="text-decoration:none; color:inherit;">
+                <h1>Movies Scout</h1>
+            </a>
             <p>Find the best movies and web series</p>
         </div>
-        <form  id="form">
-            <label class="sr-only" for="search">Search movies and web series</label>
-            <input type="text" placeholder="Search movies and web series" id="search" class="search">
-        </form>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <form id="form" novalidate>
+                <label class="sr-only" for="search">Search movies and web series</label>
+                <input type="text" placeholder="Search movies and web series" id="search" class="search" required autocomplete="off">
+            </form>
+            <button type="button" id="btn-settings" title="TMDB API Settings" style="background:var(--surface); border:1px solid var(--border); color:#fff; border-radius:10px; padding:0.65rem 0.9rem; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; gap:0.4rem;">
+                ⚙️ <span style="font-size:0.85rem; color:var(--muted);">Key</span>
+            </button>
+        </div>
     </header>
+
+    <!-- TMDB Key Settings Modal (Client-side custom key config) -->
+    <div id="settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); z-index:99999; align-items:center; justify-content:center; padding:1.5rem;">
+        <div style="background:#161d2f; border:1px solid var(--border-bright); border-radius:14px; max-width:480px; width:100%; padding:2rem; box-shadow:var(--shadow); color:#f8fafc;">
+            <h3 style="margin:0 0 0.8rem; font-size:1.4rem;">Custom TMDB API Key</h3>
+            <p style="font-size:0.9rem; color:var(--muted); line-height:1.5; margin-bottom:1.2rem;">
+                To avoid sharing or exposing private API keys publicly, you can optionally store your personal TMDB API v3 key in your browser's private storage.
+            </p>
+            <input type="password" id="input-custom-key" placeholder="Enter TMDB v3 API Key" style="width:100%; padding:0.8rem 1rem; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:#fff; font-size:0.95rem; margin-bottom:1.2rem; box-sizing:border-box;">
+            <div style="display:flex; justify-content:flex-end; gap:0.8rem;">
+                <button type="button" id="btn-close-settings" style="background:transparent; border:1px solid var(--border); color:#94a3b8; padding:0.6rem 1.2rem; border-radius:6px; cursor:pointer;">Cancel</button>
+                <button type="button" id="btn-save-settings" style="background:var(--brand); border:none; color:#fff; padding:0.6rem 1.4rem; border-radius:6px; cursor:pointer; font-weight:600;">Save Key</button>
+            </div>
+        </div>
+    </div>
+
     <section class="browse-controls" aria-label="Browse options">
         <div class="media-switcher" role="group" aria-label="Choose media type">
             <button class="media-tab active" type="button" data-media-type="movie">Movies</button>
@@ -34,9 +80,10 @@
             </select>
         </label>
     </section>
-    <div id="tags"></div>
-    <div id="myNav" class="overlay">
 
+    <div id="tags"></div>
+
+    <div id="myNav" class="overlay">
         <!-- Button to close the overlay navigation -->
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
       
@@ -44,18 +91,68 @@
         <div class="overlay-content" id="overlay-content"></div>
         
         <a href="javascript:void(0)" class="arrow left-arrow" id="left-arrow">&#8656;</a> 
-        
         <a href="javascript:void(0)" class="arrow right-arrow" id="right-arrow" >&#8658;</a>
+    </div>
 
-      </div>
     <main id="main"></main>
+
     <div class="pagination">
         <div class="page" id="prev">Previous Page</div>
         <div class="current" id="current">1</div>
         <div class="page" id="next">Next Page</div>
-
     </div>
 
+    <!-- Production Footer with legal links & cookie settings -->
+    <footer style="text-align:center; padding:3rem 1.5rem 2rem; color:var(--muted); font-size:0.9rem; border-top:1px solid var(--border); margin-top:3rem;">
+        <p style="margin:0 0 0.8rem;">
+            &copy; 2026 MovieScout. Movie metadata powered by TMDB. • 
+            <a href="privacy.html" style="color:var(--brand); text-decoration:none;">Privacy Policy</a> • 
+            <a href="terms.html" style="color:var(--brand); text-decoration:none;">Terms & Conditions</a> • 
+            <a href="javascript:void(0)" onclick="showCookieConsentPreferences()" style="color:var(--brand); text-decoration:none;">Cookie Preferences</a>
+        </p>
+        <p style="font-size:0.8rem; color:#64748b; margin:0;">
+            This product uses the TMDB API but is not endorsed or certified by TMDB.
+        </p>
+    </footer>
+
+    <!-- Scripts -->
     <script src="js/script.js"></script>
+    <script src="js/cookie-consent.js"></script>
+
+    <!-- Settings modal handler & Analytics listener -->
+    <script>
+        const btnSettings = document.getElementById('btn-settings');
+        const modalSettings = document.getElementById('settings-modal');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+        const btnSaveSettings = document.getElementById('btn-save-settings');
+        const inputKey = document.getElementById('input-custom-key');
+
+        if (btnSettings && modalSettings) {
+            btnSettings.addEventListener('click', () => {
+                inputKey.value = localStorage.getItem('moviescout_tmdb_api_key') || '';
+                modalSettings.style.display = 'flex';
+            });
+            btnCloseSettings.addEventListener('click', () => {
+                modalSettings.style.display = 'none';
+            });
+            btnSaveSettings.addEventListener('click', () => {
+                const val = inputKey.value.trim();
+                if (val) {
+                    localStorage.setItem('moviescout_tmdb_api_key', val);
+                } else {
+                    localStorage.removeItem('moviescout_tmdb_api_key');
+                }
+                modalSettings.style.display = 'none';
+                window.location.reload();
+            });
+        }
+
+        // Privacy-compliant analytics stub
+        window.addEventListener('cookieConsentUpdated', function(e) {
+            if (e.detail && e.detail.analytics) {
+                console.log('[Analytics] User consented. Initializing MovieScout telemetry...');
+            }
+        });
+    </script>
 </body>
 </html>

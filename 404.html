@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <title>404 - Title Not Found | MovieScout</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="images/logo.png"/>
+    <style>
+        .error-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+        .error-card {
+            max-width: 580px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4rem 2.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow);
+        }
+        .error-badge {
+            font-size: 7rem;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--brand);
+            margin-bottom: 1.5rem;
+            letter-spacing: -2px;
+        }
+        .error-card h1 {
+            color: #fff;
+            font-size: 2.2rem;
+            margin: 0 0 1rem;
+        }
+        .error-card p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+        .error-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem 2.2rem;
+            background: var(--brand);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .error-cta:hover {
+            background: #b80710;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<header class="site-header" style="justify-content: flex-start; padding: 1.5rem 2rem;">
+    <div class="branding">
+        <a href="index.html" style="text-decoration:none; color:inherit;">
+            <h1 style="font-size: 1.8rem;">MovieScout</h1>
+        </a>
+    </div>
+</header>
+
+<main class="error-container">
+    <div class="error-card">
+        <div class="error-badge">404</div>
+        <h1>Scene Cut From the Reel</h1>
+        <p>The movie, series, or trailer you are searching for is not available or the link has changed.</p>
+        <a href="index.html" class="error-cta">&larr; Return to Discover</a>
+    </div>
+</main>
+
+<footer style="text-align: center; padding: 2rem; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border);">
+    &copy; 2026 MovieScout. All rights reserved.
+</footer>
+
+</body>
+</html>

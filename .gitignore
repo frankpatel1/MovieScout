@@ -1,0 +1,7 @@
+# Frontend secrets and local configs
+js/config.js
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store

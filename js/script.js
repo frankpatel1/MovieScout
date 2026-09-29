@@ -1,6 +1,17 @@
-//TMDB 
+// TMDB API Configuration
+function resolveTmdbApiKey() {
+    if (window.MOVIESCOUT_CONFIG && window.MOVIESCOUT_CONFIG.TMDB_API_KEY) {
+        return 'api_key=' + window.MOVIESCOUT_CONFIG.TMDB_API_KEY.replace(/^api_key=/, '').trim();
+    }
+    const localKey = localStorage.getItem('moviescout_tmdb_api_key');
+    if (localKey) {
+        return 'api_key=' + localKey.replace(/^api_key=/, '').trim();
+    }
+    // Default fallback read-only key
+    return 'api_key=' + (window.__DEFAULT_TMDB_FALLBACK__ || '1cf50e6248dc270629e802686245c2c8');
+}
 
-const API_KEY = 'api_key=1cf50e6248dc270629e802686245c2c8';
+const API_KEY = resolveTmdbApiKey();
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const PLACEHOLDER_POSTER_URL = 'https://placehold.co/1080x1580/111827/ffffff?text=Poster+Unavailable';
